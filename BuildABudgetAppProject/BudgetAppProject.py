@@ -96,6 +96,8 @@ class Category:
         total_expense = sum(cat_expense)
         cat_per_exp = [round(x*100/total_expense, -1) for x in cat_expense]
         
+        # Scale constriction
+        #-------------------
         scale_bar = []
         scl = []
         for i in range(100, 0, -10):
@@ -114,7 +116,19 @@ class Category:
         for i in range(10):
             for item in scale_bar:
                 print(item[i], end=' ')
-            print()
+            print('')
+        #-------------------------------
+        print('-'*10)
+        max_length_name = max(cat_name, key=len)
+        #-------------------------------
+        catName = []
+        for cat in cat_name:
+            catName.append(cat.ljust(len(max_length_name)))
+        for i in range(len(max_length_name)):
+            print(' '*5, end='')
+            for item in catName:                
+                print(item[i], end=' ')            
+            print('')
         #-------------------------------
 food = Category('Food')
 food.deposit(900, 'deposit')
