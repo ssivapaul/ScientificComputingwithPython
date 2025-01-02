@@ -11,8 +11,8 @@ class Category:
         total = 0
         for dsc_amt in self.ledger:
             item_list += dsc_amt['description'][:23].ljust(23) + str(dsc_amt['amount'])[:7].rjust(7) +'\n'
-            total += dsc_amt['amount']
-        total = 'Total: ' + str(total)
+            #total += dsc_amt['amount']
+        total = 'Total: ' + str(self.balance)
         result = title + item_list + total    
         return result
 
@@ -29,7 +29,7 @@ class Category:
     # but the amount passed in should be stored in the ledger as a negative number. 
     # If there are not enough funds, nothing should be added to the ledger. 
     # This method should return True if the withdrawal took place, and False otherwise.
-    
+
     def withdraw(self, amount, description = ''):
         if self.check_funds(amount):
             self.balance -= amount
@@ -81,6 +81,50 @@ class Category:
     # Each category name should be written vertically below the bar. 
     # There should be a title at the top that says 'Percentage spent by category'.
 
-    def create_spend_chart(categories):
-        pass
-
+    def create_spend_chart(self, categories):
+        total_expense = 0
+        cat_name = []
+        cat_expense = []
+        cat_per_exp =[]
+        for category in categories:
+            cat_name.append(category.name)
+            expense = 0
+            for c in category.ledger:
+                if c['amount'] < 0:
+                    expense += -c['amount']
+            cat_expense.append(expense)
+        total_expense = sum(cat_expense)
+        cat_per_exp = [round(x*100/total_expense, -1) for x in cat_expense]
+        
+        scale_bar = []
+        scl = []
+        for i in range(100, 0, -10):
+            scl.append((str(i) + '|').rjust(4))
+        scale_bar.append(scl)
+        for exp in cat_per_exp:
+            b = ''
+            while exp >= 10:
+                exp -=10
+                b += 'o'
+            bar = b.rjust(10)
+            scale_bar.append(bar)
+            
+        # Plotting bars
+        #-------------------------------
+        for i in range(10):
+            for item in scale_bar:
+                print(item[i], end=' ')
+            print()
+        #-------------------------------
+food = Category('Food')
+food.deposit(900, 'deposit')
+food.withdraw(45.67, 'milk, cereal, eggs, bacon, bread')
+clothing = Category('Clothing')
+food.transfer(50, clothing)
+clothing.withdraw(25.75, 'Shirt, trousers')
+auto = Category('Car')
+auto.deposit(200, 'deposit')
+auto.withdraw(75, 'tires, service')
+cat = Category('Catergories')
+categories = [food, clothing, auto]
+cat.create_spend_chart(categories)
