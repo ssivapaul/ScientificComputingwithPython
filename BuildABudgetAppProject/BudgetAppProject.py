@@ -6,16 +6,12 @@ class Category:
         
     def __str__(self):
         result = ''
-        title = self.name.center(30, '*') + '\n'
-        item_list = ''
-        total = 0
-        for dsc_amt in self.ledger:
-            item_list += dsc_amt['description'][:23].ljust(23) + str(dsc_amt['amount'])[:7].rjust(7) +'\n'
-            #total += dsc_amt['amount']
-        total = 'Total: ' + str(self.balance)
-        result = title + item_list + total    
+        result=self.name.center(30,'*') + '\n'
+        for element in self.ledger:
+            result += element['description'][:23].ljust(23) + str(f"{element['amount']:<5.2f}").rjust(7) + '\n'
+        result += 'Total: ' + str(round(self.balance, 2))
         return result
-
+    # f"{number:<10.2f}"    
     # A deposit method that accepts an amount and description. 
     # If no description is given, it should default to an empty string. 
     # The method should append an object to the ledger list in the form of 
@@ -23,7 +19,7 @@ class Category:
     
     def deposit(self, amount, description = ''): 
         self.balance += amount
-        self.ledger.append({'description': description, 'amount': amount})
+        self.ledger.append({'amount': amount, 'description': description})
 
     # A withdraw method that is similar to the deposit method, 
     # but the amount passed in should be stored in the ledger as a negative number. 
@@ -33,17 +29,16 @@ class Category:
     def withdraw(self, amount, description = ''):
         if self.check_funds(amount):
             self.balance -= amount
-            self.ledger.append({'description': description, 'amount': -amount})
+            self.ledger.append({'amount': -amount, 'description': description})
             return True
-        else:
-            return False       
+        return False       
 
     # A get_balance method that returns the current balance of 
     # the budget category based on the deposits and 
     # withdrawals that have occurred.
     
     def get_balance(self):
-        return f'{self.balance}'
+        return self.balance
 
     # A transfer method that accepts an amount and another budget category as arguments. 
     # The method should add a withdrawal with the amount and the description 
@@ -68,77 +63,54 @@ class Category:
 
     def check_funds(self, amount):
         return self.balance >= amount
-       
-    # create_spend_chart that takes a list of categories as an argument. 
-    # It should return a string that is a bar chart.
+    
+# Besides the Category class, create a function (outside of the class) called 
+# create_spend_chart that takes a list of categories as an argument. 
+# It should return a string that is a bar chart.
 
-    # The chart should show the percentage spent in each category passed in to the function. 
-    # The percentage spent should be calculated only with withdrawals and not with deposits. 
-    # Down the left side of the chart should be labels 0 - 100. 
-    # The 'bars' in the bar chart should be made out of the 'o' character. 
-    # The height of each bar should be rounded down to the nearest 10. 
-    # The horizontal line below the bars should go two spaces past the final bar. 
-    # Each category name should be written vertically below the bar. 
-    # There should be a title at the top that says 'Percentage spent by category'.
+# The chart should show the percentage spent in each category passed in to the function. 
+# The percentage spent should be calculated only with withdrawals and not with deposits. 
+# Down the left side of the chart should be labels 0 - 100. 
+# The 'bars' in the bar chart should be made out of the 'o' character. 
+# The height of each bar should be rounded down to the nearest 10. 
+# The horizontal line below the bars should go two spaces past the final bar. 
+# Each category name should be written vertically below the bar. 
+# There should be a title at the top that says 'Percentage spent by category'.
 
-    def create_spend_chart(self, categories):
-        total_expense = 0
-        cat_name = []
-        cat_expense = []
-        cat_per_exp =[]
-        for category in categories:
-            cat_name.append(category.name)
-            expense = 0
-            for c in category.ledger:
-                if c['amount'] < 0:
-                    expense += -c['amount']
-            cat_expense.append(expense)
-        total_expense = sum(cat_expense)
-        cat_per_exp = [round(x*100/total_expense, -1) for x in cat_expense]
-        
-        # Scale constriction
-        #-------------------
-        scale_bar = []
-        scl = []
-        for i in range(100, 0, -10):
-            scl.append((str(i) + '|').rjust(4))
-        scale_bar.append(scl)
-        for exp in cat_per_exp:
-            b = ''
-            while exp >= 10:
-                exp -=10
-                b += 'o'
-            bar = b.rjust(10)
-            scale_bar.append(bar)
-            
-        # Plotting bars
-        #-------------------------------
-        for i in range(10):
-            for item in scale_bar:
-                print(item[i], end=' ')
-            print('')
-        #-------------------------------
-        print('-'*10)
-        max_length_name = max(cat_name, key=len)
-        #-------------------------------
-        catName = []
-        for cat in cat_name:
-            catName.append(cat.ljust(len(max_length_name)))
-        for i in range(len(max_length_name)):
-            print(' '*5, end='')
-            for item in catName:                
-                print(item[i], end=' ')            
-            print('')
-        #-------------------------------
+def create_spend_chart(categories):
+    chart = ''
+    
+    e = [[-ledger['amount'] for ledger in cat.ledger if ledger['amount'] < 0] for cat in categories] 
+    expense = [sum(i) for i in e]
+    print(expense)
+    total = sum(expense) # Expense list
+    
+    percent = list(map(lambda x: round(int(x *100//total), - 1), expense)) # Expense list round to 10
+    per = [('o'*(i//10)).rjust(11) for i in percent] # padded expense bar, ['      ooooo', '          o', '       oooo']
+    bar = [ ''.join([p[i] + '  ' for p in per]) for i in range(11)] #  
+    
+    category_name_list = [(n.name) for n in categories] # create category name portion of string  
+    max_name_length = len(max(category_name_list, key=len))
+    padded_name_list = [name.ljust(max_name_length) for name in category_name_list]
+    
+    chart += 'Percentage spent by category' + '\n' 
+    chart += ''.join([str(i).rjust(3)+'| ' + bar[(100-i)//10] + '\n' for i in range(100, -10, -10)])
+    chart += ' '*4 + '-' + '---'*len(categories) + '\n'
+    chart += ''.join([(' '*5 + ''.join(n[i] + '  ' for n in padded_name_list) + '\n') for i in range(max_name_length)])
+    
+    return chart
+
 food = Category('Food')
-food.deposit(900, 'deposit')
-food.withdraw(45.67, 'milk, cereal, eggs, bacon, bread')
+food.deposit(1900, 'deposit')
+food.withdraw(45.67925, 'milk, cereal, eggs, bacon, bread')
 clothing = Category('Clothing')
 food.transfer(50, clothing)
 clothing.withdraw(25.75, 'Shirt, trousers')
 auto = Category('Car')
 auto.deposit(200, 'deposit')
-auto.withdraw(75, 'tires, service')
-cat = Category('Catergories')
-categories = [food, clothing, auto]
-cat.create_spend_chart(categories)
+auto.withdraw(75.345, 'tires, service')
+cat = [food, clothing, auto]
+print(food)
+print(clothing)
+print(auto)
+print(create_spend_chart(cat))
