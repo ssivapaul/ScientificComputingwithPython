@@ -1,3 +1,5 @@
+import math
+
 class Category:   
     def __init__(self, name):
         self.balance = 0
@@ -82,13 +84,17 @@ def create_spend_chart(categories):
     
     e = [[-ledger['amount'] for ledger in cat.ledger if ledger['amount'] < 0] for cat in categories] 
     expense = [sum(i) for i in e]
-    print(expense)
     total = sum(expense) # Expense list
-    
-    percent = list(map(lambda x: round(int(x *100//total), - 1), expense)) # Expense list round to 10
-    per = [('o'*(i//10)).rjust(11) for i in percent] # padded expense bar, ['      ooooo', '          o', '       oooo']
-    bar = [ ''.join([p[i] + '  ' for p in per]) for i in range(11)] #  
-    
+    print()
+    print(expense)
+    print("Total: ", total)
+    percent = list(map(lambda x: int(x/total*100/10)*10 , expense)) # Expense list round to 10
+    #percent = list(map(lambda x: math.floor(x/total*100/10)*10 , expense))
+    print(percent)
+    per = [('o'*(i//10 + 1)).rjust(11) for i in percent] # padded expense bar
+    print(per)
+    bar = [ ''.join([p[i] + ' '*2 for p in per]) for i in range(11)] #  
+    #print(bar)
     category_name_list = [(n.name) for n in categories] # create category name portion of string  
     max_name_length = len(max(category_name_list, key=len))
     padded_name_list = [name.ljust(max_name_length) for name in category_name_list]
@@ -96,16 +102,17 @@ def create_spend_chart(categories):
     chart += 'Percentage spent by category' + '\n' 
     chart += ''.join([str(i).rjust(3)+'| ' + bar[(100-i)//10] + '\n' for i in range(100, -10, -10)])
     chart += ' '*4 + '-' + '---'*len(categories) + '\n'
-    chart += ''.join([(' '*5 + ''.join(n[i] + '  ' for n in padded_name_list) + '\n') for i in range(max_name_length)])
+    chart += ''.join([(' '*5 + ''.join(n[i] + '  ' for n in padded_name_list) + '\n') if i < max_name_length -1 else (' '*5 + ''.join(n[i] + '  ' for n in padded_name_list)) for i in range(max_name_length)])
     
+    print('\n')
     return chart
 
 food = Category('Food')
 food.deposit(1900, 'deposit')
-food.withdraw(45.67925, 'milk, cereal, eggs, bacon, bread')
+food.withdraw(11, 'milk, cereal, eggs, bacon, bread')
 clothing = Category('Clothing')
-food.transfer(50, clothing)
-clothing.withdraw(25.75, 'Shirt, trousers')
+food.transfer(500, clothing)
+clothing.withdraw(50.75, 'Shirt, trousers')
 auto = Category('Car')
 auto.deposit(200, 'deposit')
 auto.withdraw(75.345, 'tires, service')
